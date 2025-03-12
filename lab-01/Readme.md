@@ -170,3 +170,78 @@ ip routing
 ### Проверка связности
 
 Проверим p2p линки:
+**Проверка со Spine-01**
+```
+spine-01#ping 192.168.11.0
+PING 192.168.11.0 (192.168.11.0) 72(100) bytes of data.
+80 bytes from 192.168.11.0: icmp_seq=1 ttl=64 time=12.4 ms
+80 bytes from 192.168.11.0: icmp_seq=2 ttl=64 time=8.26 ms
+80 bytes from 192.168.11.0: icmp_seq=3 ttl=64 time=8.66 ms
+80 bytes from 192.168.11.0: icmp_seq=4 ttl=64 time=7.52 ms
+80 bytes from 192.168.11.0: icmp_seq=5 ttl=64 time=6.93 ms
+
+--- 192.168.11.0 ping statistics ---
+5 packets transmitted, 5 received, 0% packet loss, time 58ms
+rtt min/avg/max/mdev = 6.936/8.767/12.440/1.934 ms, ipg/ewma 14.611/10.504 ms
+spine-01#ping 192.168.11.2
+PING 192.168.11.2 (192.168.11.2) 72(100) bytes of data.
+80 bytes from 192.168.11.2: icmp_seq=1 ttl=64 time=11.1 ms
+80 bytes from 192.168.11.2: icmp_seq=2 ttl=64 time=11.5 ms
+80 bytes from 192.168.11.2: icmp_seq=3 ttl=64 time=7.98 ms
+80 bytes from 192.168.11.2: icmp_seq=4 ttl=64 time=8.11 ms
+80 bytes from 192.168.11.2: icmp_seq=5 ttl=64 time=7.38 ms
+
+--- 192.168.11.2 ping statistics ---
+5 packets transmitted, 5 received, 0% packet loss, time 53ms
+rtt min/avg/max/mdev = 7.383/9.226/11.511/1.735 ms, ipg/ewma 13.328/10.067 ms
+spine-01#ping 192.168.11.4
+PING 192.168.11.4 (192.168.11.4) 72(100) bytes of data.
+80 bytes from 192.168.11.4: icmp_seq=1 ttl=64 time=10.5 ms
+80 bytes from 192.168.11.4: icmp_seq=2 ttl=64 time=6.91 ms
+80 bytes from 192.168.11.4: icmp_seq=3 ttl=64 time=7.51 ms
+80 bytes from 192.168.11.4: icmp_seq=4 ttl=64 time=7.54 ms
+80 bytes from 192.168.11.4: icmp_seq=5 ttl=64 time=7.37 ms
+
+--- 192.168.11.4 ping statistics ---
+5 packets transmitted, 5 received, 0% packet loss, time 61ms
+rtt min/avg/max/mdev = 6.912/7.974/10.532/1.302 ms, ipg/ewma 15.287/9.218 ms
+```
+
+
+**Проверка со spinre-02**
+
+```
+spine-02#ping 192.168.12.0
+PING 192.168.12.0 (192.168.12.0) 72(100) bytes of data.
+80 bytes from 192.168.12.0: icmp_seq=1 ttl=64 time=9.19 ms
+80 bytes from 192.168.12.0: icmp_seq=2 ttl=64 time=7.25 ms
+80 bytes from 192.168.12.0: icmp_seq=3 ttl=64 time=12.0 ms
+80 bytes from 192.168.12.0: icmp_seq=4 ttl=64 time=15.9 ms
+80 bytes from 192.168.12.0: icmp_seq=5 ttl=64 time=18.8 ms
+
+--- 192.168.12.0 ping statistics ---
+5 packets transmitted, 5 received, 0% packet loss, time 47ms
+rtt min/avg/max/mdev = 7.256/12.677/18.853/4.267 ms, pipe 2, ipg/ewma 11.946/11.262 ms
+spine-02#ping 192.168.12.2
+PING 192.168.12.2 (192.168.12.2) 72(100) bytes of data.
+80 bytes from 192.168.12.2: icmp_seq=1 ttl=64 time=9.78 ms
+80 bytes from 192.168.12.2: icmp_seq=2 ttl=64 time=9.92 ms
+80 bytes from 192.168.12.2: icmp_seq=3 ttl=64 time=10.2 ms
+80 bytes from 192.168.12.2: icmp_seq=4 ttl=64 time=9.05 ms
+80 bytes from 192.168.12.2: icmp_seq=5 ttl=64 time=8.24 ms
+
+--- 192.168.12.2 ping statistics ---
+5 packets transmitted, 5 received, 0% packet loss, time 49ms
+rtt min/avg/max/mdev = 8.249/9.454/10.261/0.725 ms, ipg/ewma 12.481/9.569 ms
+spine-02#ping 192.168.12.4
+PING 192.168.12.4 (192.168.12.4) 72(100) bytes of data.
+80 bytes from 192.168.12.4: icmp_seq=1 ttl=64 time=8.87 ms
+80 bytes from 192.168.12.4: icmp_seq=2 ttl=64 time=7.41 ms
+80 bytes from 192.168.12.4: icmp_seq=3 ttl=64 time=9.56 ms
+80 bytes from 192.168.12.4: icmp_seq=4 ttl=64 time=9.09 ms
+80 bytes from 192.168.12.4: icmp_seq=5 ttl=64 time=8.75 ms
+
+--- 192.168.12.4 ping statistics ---
+5 packets transmitted, 5 received, 0% packet loss, time 49ms
+rtt min/avg/max/mdev = 7.418/8.739/9.568/0.727 ms, ipg/ewma 12.485/8.826 ms
+```
