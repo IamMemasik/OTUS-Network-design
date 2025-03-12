@@ -71,7 +71,8 @@ Sn - Номер spine
  
  #### Шаг 1. Подпишем ip адреса на схеме в соответсвии с придуманым ip планом.
   
- ![image](https://github.com/user-attachments/assets/7a7a24a6-6531-497d-b0c1-452017b9c731)
+![image](https://github.com/user-attachments/assets/5393801a-1f0e-4870-9a48-297f5183d886)
+
 
 #### Шаг 2. Выполним настройку leaf
 
@@ -86,6 +87,8 @@ interface Ethernet2
    description r:spine-02
    no switchport
    ip address 192.168.12.0/31
+interface Loopback0
+   ip address 172.16.0.1/32
 ip routing
 ```
 
@@ -100,6 +103,8 @@ interface Ethernet2
    description r:spine-02
    no switchport
    ip address 192.168.12.2/31
+interface Loopback0
+   ip address 172.16.0.2/32
 ip routing
 ```
 
@@ -114,6 +119,8 @@ interface Ethernet2
    description r:spine-02
    no switchport
    ip address 192.168.12.4/31
+interface Loopback0
+   ip address 172.16.0.3/32
 ip routing
 ```
 #### Шаг 3. Выполним настройку spine
@@ -135,6 +142,8 @@ interface Ethernet3
    description r:leaf-03
    no switchport
    ip address 192.168.11.5/31
+interface Loopback0
+   ip address 172.16.1.1/32
 ip routing
 ```
 **spine-02**
@@ -152,6 +161,8 @@ interface Ethernet3
    description r:leaf-03
    no switchport
    ip address 192.168.12.5/31
+interface Loopback0
+   ip address 172.16.1.2/32
 ip routing
 ```
 
