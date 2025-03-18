@@ -8,7 +8,8 @@
 
 ## Топология 
 
-![image](https://github.com/user-attachments/assets/39e1d565-277e-41bd-8aa9-f8929ac96723)
+![image](https://github.com/user-attachments/assets/0a2bea3d-3fb9-4b86-9658-adc8a7d92238)
+
 
 
 Настройка ip адресов и проверка связности на point to point link'ах выполнена в [Лабораторной работе № 1](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-01), поэтому сразу переходим в настройке OSPF
