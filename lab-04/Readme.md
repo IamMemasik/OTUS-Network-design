@@ -94,7 +94,8 @@ router bgp 65000
  no neighbor 192.168.12.0 shutdown
 ```
 
-![image](https://github.com/user-attachments/assets/9382c4c2-8a64-4590-847e-dc7e1fb89e01)
+![Uploading image.png…]()
+
 
 
 Видим успешно установленую TCP сессию (обратим внимание на TTL = 1 - значение пот умолчанию для eBGP), а затем и BGP.
