@@ -75,7 +75,8 @@ router bgp 65000
 ```
 И снова обратим внимание на dump и на статусы соседей.
 
-![image](https://github.com/user-attachments/assets/b729ae3c-dd53-4c89-95c3-495aa25bca5d)
+![image](https://github.com/user-attachments/assets/342ddbd8-f6c8-41f7-878c-19de3ded06ed)
+
 
 
 
