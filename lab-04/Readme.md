@@ -83,7 +83,8 @@ router bgp 65000
 В дампе видим, что tcp-сессия смогла установиться и leaf-01 послал hello-собощение на spine-02, но из-за того что на spine-02 сосед настроен в shutdown, то он закрывает сессию, а leaf-01 находиться в состояниях ACTIVE --> OpenSent --> Active --> OpenSent.
 
 
-![image](https://github.com/user-attachments/assets/ea8a13a3-76c0-4d44-af8e-fa6dfd9a01a0)
+![image](https://github.com/user-attachments/assets/750d3b76-24a6-4a64-8b79-b6507680f7a2)
+
 
 
 
@@ -92,7 +93,8 @@ router bgp 65000
 ```
  no neighbor 192.168.12.0 shutdown
 ```
-![image](https://github.com/user-attachments/assets/a8c9317b-6f92-4f52-9132-1a49df963dff)
+
+![image](https://github.com/user-attachments/assets/9382c4c2-8a64-4590-847e-dc7e1fb89e01)
 
 
 Видим успешно установленую TCP сессию (обратим внимание на TTL = 1 - значение пот умолчанию для eBGP), а затем и BGP.
