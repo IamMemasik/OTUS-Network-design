@@ -43,7 +43,8 @@ router bgp 65001                 # Запускаем bgp процесс с но
 
 Запустим dump трафика на Ether 1 и Ether 2 и просмотрим сообщения установления bgp-сессии от leaf-01 до spine-02.
 
-![image](https://github.com/user-attachments/assets/d006ae50-7ef4-4744-a550-90f2a6139f72)
+![image](https://github.com/user-attachments/assets/8e58740c-ae78-4503-89a9-52f4ec281a11)
+
 
 
 Заметим что spine шлёт reset. 
