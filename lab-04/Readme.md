@@ -94,7 +94,8 @@ router bgp 65000
  no neighbor 192.168.12.0 shutdown
 ```
 
-![Uploading image.png…]()
+![image](https://github.com/user-attachments/assets/8ebae2d8-d85d-4fd3-b656-97d167bba631)
+
 
 
 
