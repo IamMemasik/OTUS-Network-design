@@ -1,4 +1,4 @@
-![image](https://github.com/user-attachments/assets/868862a7-a26f-40d1-867b-74657e485fd7)# Построение Underlay сети(BGP)
+# Построение Underlay сети(BGP)
 
 ## Цель
 Настроить BGP для Underlay сети
