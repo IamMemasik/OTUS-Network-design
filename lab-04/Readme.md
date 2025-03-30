@@ -375,3 +375,54 @@ sh ip bgp
 
 К сожалению, из-за особенностей виртуализации не получилось выловить в дампе как балансируется трафик, но на реальном оборудовании балансировка должна работать.
 
+
+И для связности looback не нужно отдавать p2p сети т.к. в eBGP nexthop будут стоять spine, а не ip лифа.
+
+Поэтому уберём из underlay p2p сети, перезапустим BGP сессию 
+
+```
+clear ip bgp *
+```
+
+И посмотрим теперь маршруты на leaf и spine
+
+**leaf-01**
+
+![alt text](image-32.png)
+
+**leaf-02**
+
+![alt text](image-33.png)
+
+**leaf-03**
+
+![alt text](image-34.png)
+
+**spine-01**
+
+![alt text](image-35.png)
+
+**spine-02**
+
+![alt text](image-36.png)
+
+
+И снова проверим связность от leaf-01.
+
+![alt text](image-37.png)
+
+
+
+Итоговая конфигурация файлах:
+
+
+[Leaf-01](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-04/leaf-01.txt)
+
+[Leaf-02](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-04/leaf-02.txt)
+
+[Leaf-03](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-04/leaf-03.txt)
+
+[Spine-01](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-04/spine-01.txt)
+
+[Spine-02](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-04/spine-02.txt)
+
