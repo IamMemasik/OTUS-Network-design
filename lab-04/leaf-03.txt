@@ -1,0 +1,62 @@
+leaf-03#sh run
+! Command: show running-config
+! device: leaf-03 (vEOS-lab, EOS-4.29.2F)
+!
+! boot system flash:/vEOS-lab.swi
+!
+no aaa root
+!
+transceiver qsfp default-mode 4x10G
+!
+service routing protocols model ribd
+!
+hostname leaf-03
+!
+spanning-tree mode mstp
+!
+interface Ethernet1
+   description r:spine-01
+   no switchport
+   ip address 192.168.11.4/31
+!
+interface Ethernet2
+   description r:spine-02
+   no switchport
+   ip address 192.168.12.4/31
+!
+interface Ethernet3
+!
+interface Ethernet4
+!
+interface Ethernet5
+!
+interface Ethernet6
+!
+interface Ethernet7
+!
+interface Ethernet8
+!
+interface Loopback0
+   ip address 172.16.0.3/32
+!
+interface Management1
+!
+ip routing
+!
+ip prefix-list UNDERLAY_IP
+   seq 30 permit 172.16.0.3/32
+!
+route-map UNDERLAY_EXPORT permit 10
+   match ip address prefix-list UNDERLAY_IP
+!
+router bgp 65003
+   router-id 172.16.0.3
+   maximum-paths 10
+   neighbor SPINE peer group
+   neighbor SPINE remote-as 65000
+   neighbor SPINE bfd
+   neighbor 192.168.11.5 peer group SPINE
+   neighbor 192.168.12.5 peer group SPINE
+   redistribute connected route-map UNDERLAY_EXPORT
+!
+end
