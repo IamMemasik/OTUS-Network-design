@@ -352,15 +352,15 @@ sh ip route bgp detail
 sh ip bgp
 ```
 
-leaf-01
+**leaf-01**
 
 ![alt text](image-28.png)
 
-leaf-02
+**leaf-02**
 
 ![alt text](image-29.png)
 
-leaf-03
+**leaf-03**
 
 ![alt text](image-30.png)
 
