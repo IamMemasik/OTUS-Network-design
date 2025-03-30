@@ -1,6 +1,6 @@
 # Построение Underlay сети(BGP)
 
-## Цель
+## Цель 
 Настроить BGP для Underlay сети
 
 
@@ -8,8 +8,7 @@
 
 ## Топология 
 
-![image](https://github.com/user-attachments/assets/79c9d7b4-6d4c-405b-bc3e-03d3bd8d3e56)
-
+![alt text](image-1.png)
 
 Настройка ip адресов и проверка связности на point to point link'ах выполнена в [Лабораторной работе № 1](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-01), поэтому сразу переходим в настройке eBGP
 
@@ -43,9 +42,7 @@ router bgp 65001                 # Запускаем bgp процесс с но
 
 Запустим dump трафика на Ether 1 и Ether 2 и просмотрим сообщения установления bgp-сессии от leaf-01 до spine-02.
 
-![image](https://github.com/user-attachments/assets/8e58740c-ae78-4503-89a9-52f4ec281a11)
-
-
+![alt text](image-2.png)
 
 Заметим что spine шлёт reset. 
 Это происходит потому что не запущен BGP процесс на spine-02.
@@ -57,8 +54,7 @@ router bgp 65001                 # Запускаем bgp процесс с но
 router bgp 65000
 ```
 
-![image](https://github.com/user-attachments/assets/5fb6fae7-7132-44d5-92ce-e85bd4dd5db5)
-
+![alt text](image-3.png)
 
 
 Заметим, что spine отмалчивается, это происходит из-за того что spine не ожидает соединения от leaf-01.
@@ -75,17 +71,14 @@ router bgp 65000
 ```
 И снова обратим внимание на dump и на статусы соседей.
 
-![image](https://github.com/user-attachments/assets/342ddbd8-f6c8-41f7-878c-19de3ded06ed)
-
-
-
+![alt text](image-4.png)
 
 В дампе видим, что tcp-сессия смогла установиться и leaf-01 послал hello-собощение на spine-02, но из-за того что на spine-02 сосед настроен в shutdown, то он закрывает сессию, а leaf-01 находиться в состояниях ACTIVE --> OpenSent --> Active --> OpenSent.
 
 
-![image](https://github.com/user-attachments/assets/cae9a32f-91cd-450e-b1a8-c5615e45d92f)
 
 
+![alt text](image-5.png)
 
 
 Включим соседа spine-02 и посмотрим dump
@@ -93,22 +86,16 @@ router bgp 65000
 ```
  no neighbor 192.168.12.0 shutdown
 ```
-
-![image](https://github.com/user-attachments/assets/8ebae2d8-d85d-4fd3-b656-97d167bba631)
-
-
-
+![alt text](image-8.png)
 
 Видим успешно установленую TCP сессию (обратим внимание на TTL = 1 - значение пот умолчанию для eBGP), а затем и BGP.
 leaf-01 и spine-01 успешно согласовали соседство и leaf-01 отдал свои маршруты (NLRI) на spine-02, а spine-02, в свою очередь, ничего не отдал, так как мы не указали что отдавать.
 
-![image](https://github.com/user-attachments/assets/7b7142f4-464a-4ef0-8402-24446d1dcc95)
-
+![alt text](image-9.png)
 
 Просмотрим что отдаёт и получает spine-02
 
-![image](https://github.com/user-attachments/assets/f4a294e4-e7d1-4de9-ad44-a1ed4d9df52a)
-
+![alt text](image-11.png)
 
 
 Настроим route-map на spine-02
@@ -129,23 +116,19 @@ router bgp 65000
 
 После настройки сразу увидим update от spine-02 с префиксами в NLRI, которые мы проаносировали.
 
-![image](https://github.com/user-attachments/assets/e4583a05-df66-4e4d-9d1d-c9d030ca2399)
-
+ ![alt text](image-12.png)
 
 И на самом spine-02 теперь видно какие маршруты он отдаёт
 
-![image](https://github.com/user-attachments/assets/6ba6be80-c266-4afd-91bb-98e967aeb27a)
-
+![alt text](image-13.png)
 
 Просмотим таблицы маршрутизации на leaf-01 и spine-02.
 
 **leaf-01**
-![image](https://github.com/user-attachments/assets/226eed0e-2413-4ea2-ad31-47f62bfec201)
-
+![alt text](image-14.png)
 
 **spine-02**
-![image](https://github.com/user-attachments/assets/e282abc7-11df-41b9-ae1a-46b3c1b1c8cb)
-
+![alt text](image-15.png)
 
 Между leaf-01 и spine-02 связность в uderlay поднята.
 
@@ -159,13 +142,11 @@ router bgp 65001
    neighbor SPINE bfd 
 ```
 
-![image](https://github.com/user-attachments/assets/b2bb948b-dfbc-4748-8d63-973467197f44)
-
+![alt text](image-16.png)
 
 Пока BFD ниразу не поднялось, BGP сессия не будет разорвана.
 
-![image](https://github.com/user-attachments/assets/9e878f9a-3f2c-4f4a-b2b7-e524d801d98c)
-
+![alt text](image-17.png)
 
 
 Включим BFD на Spine-02
@@ -176,14 +157,12 @@ router bgp 65000
 
 В дампе заметим, как bfd перешёл в состояние UP
 
-![image](https://github.com/user-attachments/assets/e3474c8a-d3bf-4e8f-8b96-a3e67a3124cd)
+![alt text](image-18.png)
 
 
+![alt text](image-19.png)
 
-![image](https://github.com/user-attachments/assets/42eb78ec-0f5a-4403-b3f8-24830655afa4)
-
-
-Проверим, работу BFD, умышлено поменяем ip адрес spine-02 на интерфейсе Ethernet 1, после чего bfd должен моментально обнаружить разрыв связи и погасить bgp соседтво.
+Проверим, работу BFD, умышлено поменяем ip адрес spine-02 на интерфейсе Ethernet 1, после чего должен моментально обнаружить разрыв связи и погасить bgp соседтво.
 
 **spine-02**
 ```
@@ -191,13 +170,11 @@ int eth1
 ip address 192.168.112.1/31 
 ```
 
-![image](https://github.com/user-attachments/assets/6ce11636-68ef-4b19-89e3-5cd039b7506a)
-
+![alt text](image-20.png)
 
 Видно, что после потери 3 bfd сообщений, bgp сессия была разорвана.
 
-![image](https://github.com/user-attachments/assets/23fc9a13-98bb-4e6d-9b5a-0fe21144b2b5)
-
+![alt text](image-21.png)
 
 Вернём правильный ip адрес и проверим bfd и bgp соседство.
 
@@ -208,8 +185,7 @@ ip address 192.168.12.1/31
 ```
 
 
-![image](https://github.com/user-attachments/assets/f7a6f517-236a-4eef-b7ee-143ba86a1e6c)
-
+![alt text](image-22.png)
 
 
 BFD настроен и отрабатывает корректно.
