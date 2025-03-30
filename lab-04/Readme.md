@@ -191,28 +191,187 @@ ip address 192.168.12.1/31
 BFD настроен и отрабатывает корректно.
 
 
+
 ## Настроим eBGP и BFD на всех устройтсвах
 
 ### Итоговая конфигурация underlay на leaf
 
 **leaf-01**
 ```
-
+ip prefix-list UNDERLAY_IP
+   seq 10 permit 192.168.11.0/31
+   seq 20 permit 192.168.12.0/31
+   seq 30 permit 172.16.0.1/32
+!
+route-map UNDERLAY_EXPORT permit 10
+   match ip address prefix-list UNDERLAY_IP
+!
+router bgp 65001
+   router-id 172.16.0.1
+   neighbor SPINE peer group
+   neighbor SPINE remote-as 65000
+   neighbor SPINE bfd
+   neighbor 192.168.11.1 peer group SPINE
+   neighbor 192.168.12.1 peer group SPINE
+   redistribute connected route-map UNDERLAY_EXPORT
+!
+end
 ```
 **leaf-02**
 ```
+ip prefix-list UNDERLAY_IP
+   seq 10 permit 192.168.11.2/31
+   seq 20 permit 192.168.12.2/31
+   seq 30 permit 172.16.0.2/32
+!
+route-map UNDERLAY_EXPORT permit 10
+   match ip address prefix-list UNDERLAY_IP
+!
+router bgp 65002
+   router-id 172.16.0.2
+   neighbor SPINE peer group
+   neighbor SPINE remote-as 65000
+   neighbor SPINE bfd
+   neighbor 192.168.11.3 peer group SPINE
+   neighbor 192.168.12.3 peer group SPINE
+   redistribute connected route-map UNDERLAY_EXPORT
+!
+end
+```
+
+**leaf-03**
 
 ```
+ip prefix-list UNDERLAY_IP
+   seq 10 permit 192.168.11.4/31
+   seq 20 permit 192.168.12.4/31
+   seq 30 permit 172.16.0.3/32
+!
+route-map UNDERLAY_EXPORT permit 10
+   match ip address prefix-list UNDERLAY_IP
+!
+router bgp 65003
+   router-id 172.16.0.3
+   neighbor SPINE peer group
+   neighbor SPINE remote-as 65000
+   neighbor SPINE bfd
+   neighbor 192.168.11.5 peer group SPINE
+   neighbor 192.168.12.5 peer group SPINE
+   redistribute connected route-map UNDERLAY_EXPORT
+!
+end
+```
+
 
 ### Итоговая конфигурация underlay на spine
 
 **Spine-01** 
 ```
-
+ip prefix-list UNDERLAY_IP
+   seq 10 permit 192.168.11.0/31
+   seq 20 permit 192.168.11.2/31
+   seq 30 permit 192.168.11.4/31
+   seq 40 permit 172.16.1.1/32
+!
+route-map UNDERLAY_EXPORT permit 10
+   match ip address prefix-list UNDERLAY_IP
+!
+router bgp 65000
+   router-id 172.16.1.1
+   neighbor 192.168.11.0 remote-as 65001
+   neighbor 192.168.11.0 bfd
+   neighbor 192.168.11.2 remote-as 65002
+   neighbor 192.168.11.2 bfd
+   neighbor 192.168.11.4 remote-as 65003
+   neighbor 192.168.11.4 bfd
+   redistribute connected route-map UNDERLAY_EXPORT
+!
+end
 ```
 **Spine-02**
 ```
-
+ ip prefix-list UNDERLAY_IP
+   seq 10 permit 192.168.12.0/31
+   seq 20 permit 192.168.12.2/31
+   seq 30 permit 192.168.12.4/31
+   seq 40 permit 172.16.1.2/32
+!
+route-map UNDERLAY_EXPORT permit 10
+   match ip address prefix-list UNDERLAY_IP
+!
+router bgp 65000
+   router-id 172.16.1.2
+   neighbor 192.168.12.0 remote-as 65001
+   neighbor 192.168.12.0 bfd
+   neighbor 192.168.12.2 remote-as 65002
+   neighbor 192.168.12.2 bfd
+   neighbor 192.168.12.4 remote-as 65003
+   neighbor 192.168.12.4 bfd
+   redistribute connected route-map UNDERLAY_EXPORT
+!
+end
+```
+### Просмотрим информацию по BGP на всех устройствах
+```
+show ip bgp summary
+show ip bgp
+show ip route bgp detail
 ```
 
+**leaf-01**
+
+![alt text](image-23.png)
+
+**leaf-02**
+
+![alt text](image-24.png)
+
+**leaf-03**
+
+![alt text](image-25.png)
+
+**spine-01**
+
+![alt text](image-26.png)
+
+**spine-02**
+
+![alt text](image-27.png)
+
+
+Заметим, что на leaf маршрут до loobback других leaf, выбирается только через одно устройтсво, через spine-01 - это из-за того что в BGP по умолчанию выключена балансирока. А маршрут через spine-01 выбрался по Best Path Selection, на шаге с router-id, 172.16.1.1(spine-01) < 172.16.1.2(spine-02).
+
+Включим балансировку для bgp на всех устройствах, но изменения будут замечены только на leaf, т.к. на spine нечего балансировать.
+```
+maximum-paths 10
+```
+
+Просмотрим что именилось в таблице маршрутизации
+```
+sh ip route bgp detail
+sh ip bgp
+```
+
+leaf-01
+
+![alt text](image-28.png)
+
+leaf-02
+
+![alt text](image-29.png)
+
+leaf-03
+
+![alt text](image-30.png)
+
+
+Теперь видим что трафик будет балансироваться между spine-01 и spine-02.
+
+Проверим связность с leaf-01 до всех loopback интерфейсов.
+
+**leaf-01**
+
+![alt text](image-31.png)
+
+К сожалению, из-за особенностей виртуализации не получлиось выловить в дампе как балансируется трафик, но на реальном оборудовании балансировка должна работать.
 
