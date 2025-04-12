@@ -21,17 +21,17 @@
 ### Настройка на всех leaf 
 
 ```
-vrf instance INSIDE
-ip routing vrf INSIDE
-interface Vlan10
-   vrf INSIDE
-   ip address virtual 10.1.10.1/24
+vrf instance INSIDE                # Создаём vrf
+ip routing vrf INSIDE              # Включаем роутинг
+interface Vlan10                   # Создаём SVI
+   vrf INSIDE                      # Засовываем SVI в VRF
+   ip address virtual 10.1.10.1/24 # Добавляем anycast gw address
 !
-interface Vlan20
+interface Vlan20 
    vrf INSIDE
    ip address virtual 10.1.20.1/24
 
-ip virtual-router mac-address 00:00:00:00:00:01
+ip virtual-router mac-address 00:00:00:00:00:01  # Указываем mac для виртуальных адресов
 ```
 *Для asymmetric IRB необходимо чтобы на каждом leaf были vlan которые учавствуют в сетевом обмене, поэтому убедимся что на всех leaf есть vlan 10 и 20.*
 
@@ -68,9 +68,9 @@ ip virtual-router mac-address 00:00:00:00:00:01
 
 ```
 interface Vxlan1
-   vxlan vrf INSIDE vni 50000
+   vxlan vrf INSIDE vni 50000            # Создаём L3 VNI
 router bgp 65001
-   vrf INSIDE
+   vrf INSIDE                            # Настраиваем vrf для работы с BGP
       rd 172.16.0.1:50000
       route-target import evpn 100:50000
       route-target export evpn 100:50000
