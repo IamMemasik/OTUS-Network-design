@@ -13,7 +13,7 @@
 
 В качетсве underlay сети используется eBGP, разбор и настройка выполнена в [Лабораторной работе № 4](https://github.com/IamMemasik/OTUS-Network-design/blob/main/lab-04/Readme.md)
 
-Настройка L2 сервиса выполнена в [Лабораторной работе № 5](https://github.com/IamMemasik/OTUS-Network-design/blob/main/lab-05/readme.md)
+Настройка l2vpn сервиса выполнена в [Лабораторной работе № 5](https://github.com/IamMemasik/OTUS-Network-design/blob/main/lab-05/readme.md)
 
 ## Настройка Asymmetric IRB
 
@@ -132,7 +132,7 @@ icmp reply
 ![alt text](image-15.png)
 
 
-Таким образом главным преимущетсвом Symmetric IRB заключается в том, что строить vrf lite, а всё будет маршрутизироваться в "транспортном" vrf
+Таким образом, главное преимущетсво Symmetric IRB заключается в том, что не нужно строить vrf lite, а всё будет маршрутизироваться в "транспортном" vrf.
 
 ## Итоговая конфигурация в файлах:
 
