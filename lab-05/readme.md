@@ -205,7 +205,7 @@ interface Ethernet3
 router bgp 65003
 vlan 10
 rd 172.16.0.3:10010
-route-target both 20:10020
+route-target both 10:10010
 redistribute learned
 !
 vlan 20
@@ -295,40 +295,60 @@ clinet4 - 10.1.20.101/24 - vlan 20
 
 Просмотрим таблицу type 2 маршрутов:
 
-leaf-01
+**leaf-01**
 
 ![alt text](image-16.png)
 
-leaf-02
+
+**leaf-02**
 
 ![alt text](image-17.png)
 
-leaf-03
+**leaf-03**
 
 ![alt text](image-18.png)
 
+client1 mac - 00:50:79:66:68:05 - vlan 10  
+client2 mac - 00:50:79:66:68:07 - vlan 20  
+client3 mac - 00:50:79:66:68:08 - vlan 10  
+client4 mac - 00:50:79:66:68:09 - vlan 10  
 
 ### Проверим пинг
 В 10 vlan пингуется только 10 vlan
 
+![alt text](image-19.png)
 
 В 20 vlan пингуется только 20 vlan
-![alt text](image-19.png)
+
+![alt text](image-20.png)
+
+
 ### Настроим модель EVPN VLAN-Aware Bundle Service
 
 
 
-Итоговая конфигурация файлах:
+## Итоговая конфигурация в файлах:
+
+### VLAN-Based
+[Leaf-01](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-05/vlan-based/leaf-01.txt)
+
+[Leaf-02](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-05/vlan-based/leaf-02.txt)
+
+[Leaf-03](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-05/vlan-based/leaf-03.txt)
+
+[Spine-01](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-05/vlan-based/spine-01.txt)
+
+[Spine-02](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-05/vlan-based/spine-02.txt)
 
 
-[Leaf-01](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-05/leaf-01.txt)
+## VLAN-Aware Bundle 
+[Leaf-01](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-05/vlan-aware/leaf-01.txt)
 
-[Leaf-02](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-05/leaf-02.txt)
+[Leaf-02](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-05/vlan-aware/leaf-02.txt)
 
-[Leaf-03](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-05/leaf-03.txt)
+[Leaf-03](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-05/vlan-aware/leaf-03.txt)
 
-[Spine-01](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-05/spine-01.txt)
+[Spine-01](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-05/vlan-aware/spine-01.txt)
 
-[Spine-02](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-05/spine-02.txt)
-
+[Spine-02](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-05/vlan-aware/spine-02.txt)
 
