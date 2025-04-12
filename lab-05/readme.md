@@ -288,8 +288,10 @@ clinet4 - 10.1.20.101/24 - vlan 20
 Заметим два маршрута:  
 
 1) Mac
+
 ![alt text](image-15.png)
-2) Mac/ip
+3) Mac/ip
+
 ![alt text](image-14.png)
 
 
