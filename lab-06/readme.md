@@ -111,7 +111,7 @@ router bgp 65003
 
 Был 64, стал 62, так как пакет теперь маршрутизируется в двух местах.
 
-Просмотрим L3 VNI и дополнительное community EVPN Router MAC.
+Просмотрим L3 VNI и дополнительное community EVPN Router MAC - это mac адрес на который перезатирается исходный destinatoin-mac адрес внутреннего заголовка.
 
 ![alt text](image-11.png)
 
@@ -132,6 +132,8 @@ icmp reply
 ![alt text](image-15.png)
 
 
+Таким образом главным преимущетсвом Symmetric IRB заключается в том, что строить vrf lite, а всё будет маршрутизироваться в "транспортном" vrf
+
 ## Итоговая конфигурация в файлах:
 
 ### Asymmetric IRB
@@ -150,7 +152,6 @@ icmp reply
 [Leaf-02](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-06/Symmetric-IRB/leaf-02.txt)
 
 [Leaf-03](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-06/Symmetric-IRB/leaf-03.txt)
-
 
 
 
