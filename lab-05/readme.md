@@ -315,7 +315,7 @@ client2 mac - 00:50:79:66:68:07 - vlan 20
 client3 mac - 00:50:79:66:68:08 - vlan 10  
 client4 mac - 00:50:79:66:68:09 - vlan 10  
 
-### Проверим пинг
+#### Проверим пинг
 В 10 vlan пингуется только 10 vlan
 
 ![alt text](image-19.png)
@@ -325,8 +325,71 @@ client4 mac - 00:50:79:66:68:09 - vlan 10
 ![alt text](image-20.png)
 
 
+
 ### Настроим модель EVPN VLAN-Aware Bundle Service
 
+**leaf-01**
+
+```
+router bgp 65001
+no vlan 10
+
+vlan-aware-bundle INSIDE
+   rd 172.16.0.1:10100
+   route-target both 100:10100
+   redistribute learned
+   vlan 10,20
+```
+
+**leaf-02**
+
+```
+router bgp 65002
+no vlan 20
+
+vlan-aware-bundle INSIDE
+   rd 172.16.0.2:10100
+   route-target both 100:10100
+   redistribute learned
+   vlan 10,20
+```
+
+**leaf-03**
+
+```
+router bgp 65003
+no vlan 10 
+no vlan 20
+
+vlan-aware-bundle INSIDE
+   rd 172.16.0.3:10100
+   route-target both 100:10100
+   redistribute learned
+   vlan 10,20
+```
+
+Заметим, что теперь в type 2 Ethernet tag id = vni 
+
+![alt text](image-23.png)
+
+#### Проверим пинг
+vlan 10 ![alt text](image-21.png)
+
+vlan 20 ![alt text](image-22.png)
+
+Просмотрим информацию о EVI и таблицу маршрутов
+
+**leaf-01**
+
+![alt text](image-24.png)
+
+**leaf-02**
+
+![alt text](image-25.png)
+
+**leaf-03**
+
+![alt text](image-26.png)
 
 
 ## Итоговая конфигурация в файлах:
@@ -353,4 +416,6 @@ client4 mac - 00:50:79:66:68:09 - vlan 10
 [Spine-01](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-05/vlan-aware/spine-01.txt)
 
 [Spine-02](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-05/vlan-aware/spine-02.txt)
+
+
 
