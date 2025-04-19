@@ -183,11 +183,11 @@ shutdown
 ## Итоговая конфигурация в файлах:
 
 
-[Leaf-01](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-06/Asymmetric-IRB/leaf-01.txt)
+[Leaf-01](https://github.com/IamMemasik/OTUS-Network-design/blob/main/lab-07/ESI/leaf-01.txt)
 
-[Leaf-02](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-06/Asymmetric-IRB/leaf-02.txt)
+[Leaf-02](https://github.com/IamMemasik/OTUS-Network-design/blob/main/lab-07/ESI/leaf-02.txt)
 
-[Leaf-03](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-06/Asymmetric-IRB/leaf-03.txt)
+[Switch](https://github.com/IamMemasik/OTUS-Network-design/blob/main/lab-07/ESI/switch.txt)
 
 
 
