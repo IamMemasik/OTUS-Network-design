@@ -1,0 +1,48 @@
+switch(config)# sh run 
+! Command: show running-config
+! device: switch (vEOS-lab, EOS-4.29.2F)
+!
+! boot system flash:/vEOS-lab.swi
+!
+no aaa root
+!
+transceiver qsfp default-mode 4x10G
+!
+service routing protocols model ribd
+!
+hostname switch
+!
+spanning-tree mode mstp
+!
+vlan 10,20
+!
+interface Port-Channel1
+   description r:leaf-01/02 c:evpn-esi
+   switchport mode trunk
+!
+interface Ethernet1
+   channel-group 1 mode passive
+!
+interface Ethernet2
+   shutdown
+   channel-group 1 mode passive
+!
+interface Ethernet3
+   switchport access vlan 10
+!
+interface Ethernet4
+   switchport access vlan 20
+!
+interface Ethernet5
+!
+interface Ethernet6
+!
+interface Ethernet7
+!
+interface Ethernet8
+!
+interface Management1
+!
+no ip routing
+!
+end
