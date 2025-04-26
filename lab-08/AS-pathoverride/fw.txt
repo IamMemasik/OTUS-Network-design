@@ -1,0 +1,66 @@
+fw(config-router-bgp)#sh run
+! Command: show running-config
+! device: fw (vEOS-lab, EOS-4.29.2F)
+!
+! boot system flash:/vEOS-lab.swi
+!
+no aaa root
+!
+transceiver qsfp default-mode 4x10G
+!
+service routing protocols model ribd
+!
+hostname fw
+!
+spanning-tree mode mstp
+!
+interface Ethernet1
+   description "r:leaf-03"
+   no switchport
+!
+interface Ethernet1.1
+   description "r:leaf-03 c:vrf-inside"
+   encapsulation dot1q vlan 1
+   ip address 192.168.255.1/31
+!
+interface Ethernet1.2
+   description "r:leaf-03 c:vrf-OTUS"
+   encapsulation dot1q vlan 2
+   ip address 192.168.255.3/31
+!
+interface Ethernet1.3
+   description "r:leaf-03 c:vrf-DMZ"
+   encapsulation dot1q vlan 3
+   ip address 192.168.255.5/31
+!
+interface Ethernet2
+!
+interface Ethernet3
+!
+interface Ethernet4
+!
+interface Ethernet5
+!
+interface Ethernet6
+!
+interface Ethernet7
+!
+interface Ethernet8
+!
+interface Loopback0
+   ip address 172.16.255.1/32
+!
+interface Management1
+!
+ip routing
+!
+router bgp 65500
+   router-id 172.16.255.1
+   neighbor 192.168.255.0 remote-as 65003
+   neighbor 192.168.255.0 remove-private-as all replace-as
+   neighbor 192.168.255.2 remote-as 65003
+   neighbor 192.168.255.2 remove-private-as all replace-as
+   neighbor 192.168.255.4 remote-as 65003
+   neighbor 192.168.255.4 remove-private-as all replace-as
+!
+end
