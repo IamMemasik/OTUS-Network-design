@@ -365,17 +365,18 @@ router bgp 6500X
 *Было решено убрать bfd так как оно очень мешало в eve-ng, часто падало соседство*
 
 ### Конфигуация с одинаковыми AS на spine c allowas-in:
-[Leaf-01](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-08/Allowas-in/leaf-01.txt)
+[Leaf-01](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-08/Allowas-in/Leaf-01.txt)
 
-[Leaf-02](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-08/Allowas-in/leaf-02.txt)
+[Leaf-02](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-08/Allowas-in/Leaf-02.txt)
 
-[Leaf-03](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-08/Allowas-in/leaf-03.txt)
+[Leaf-03](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-08/Allowas-in/Leaf-03.txt)
 
-[Spine-01](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-08/Allowas-in/spine-01.txt)
+[Spine-01](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-08/Allowas-in/Spine-01.txt)
 
-[Spine-02](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-08/Allowas-in/spine-02.txt)
+[Spine-02](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-08/Allowas-in/Spine-02.txt)
 
 [fw](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-08/Allowas-in/fw.txt)
+
 
 
 
