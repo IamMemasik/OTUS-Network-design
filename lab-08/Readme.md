@@ -339,7 +339,138 @@ router bgp 65000
 
 ### Настройка vrf leaking через fw без allowas-in
 
+Сделаем разные AS на spine
 
+Обновлённая топология: 
+
+**spine-01**
+
+```
+no router bgp 65000
+router bgp 65101
+   router-id 172.16.1.1
+   maximum-paths 10
+   neighbor LEAF_OVERLAY peer group
+   neighbor LEAF_OVERLAY update-source Loopback0
+   neighbor LEAF_OVERLAY ebgp-multihop 2
+   neighbor LEAF_OVERLAY send-community
+   neighbor 172.16.0.1 peer group LEAF_OVERLAY
+   neighbor 172.16.0.1 remote-as 65001
+   neighbor 172.16.0.2 peer group LEAF_OVERLAY
+   neighbor 172.16.0.2 remote-as 65002
+   neighbor 172.16.0.3 peer group LEAF_OVERLAY
+   neighbor 172.16.0.3 remote-as 65003
+   neighbor 192.168.11.0 remote-as 65001
+   neighbor 192.168.11.2 remote-as 65002
+   neighbor 192.168.11.4 remote-as 65003
+   redistribute connected route-map UNDERLAY_EXPORT
+   !
+   address-family evpn
+      neighbor LEAF_OVERLAY activate
+   !
+   address-family ipv4
+      no neighbor LEAF_OVERLAY activate
+```
+
+**spine-02**
+
+```
+no router bgp 65000
+router bgp 65102
+   router-id 172.16.1.2
+   maximum-paths 10
+   neighbor LEAF_OVERLAY peer group
+   neighbor LEAF_OVERLAY update-source Loopback0
+   neighbor LEAF_OVERLAY ebgp-multihop 2
+   neighbor LEAF_OVERLAY send-community
+   neighbor 172.16.0.1 peer group LEAF_OVERLAY
+   neighbor 172.16.0.1 remote-as 65001
+   neighbor 172.16.0.2 peer group LEAF_OVERLAY
+   neighbor 172.16.0.2 remote-as 65002
+   neighbor 172.16.0.3 peer group LEAF_OVERLAY
+   neighbor 172.16.0.3 remote-as 65003
+   neighbor 192.168.12.0 remote-as 65001
+   neighbor 192.168.12.2 remote-as 65002
+   neighbor 192.168.12.4 remote-as 65003
+   redistribute connected route-map UNDERLAY_EXPORT
+   !
+   address-family evpn
+      neighbor LEAF_OVERLAY activate
+   !
+   address-family ipv4
+      no neighbor LEAF_OVERLAY aendctivate
+```
+
+**leaf-01**
+```
+router bgp 65001
+   no neighbor SPINE peer group
+   no neighbor SPINE remote-as 65000
+   no neighbor SPINE_OVERLAY allowas-in 1
+   no neighbor SPINE_OVERLAY remote-as 65000
+   neighbor 192.168.11.1 remote-as 65101
+   neighbor 192.168.12.1 remote-as 65102
+   neighbor 172.16.1.1 remote-as 65101
+   neighbor 172.16.1.2 remote-as 65102   
+```
+
+**leaf-02**
+```
+router bgp 65002
+   no neighbor SPINE peer group
+   no neighbor SPINE remote-as 65000
+   no neighbor SPINE_OVERLAY allowas-in 1
+   no neighbor SPINE_OVERLAY remote-as 65000
+   neighbor 192.168.11.3 remote-as 65101
+   neighbor 192.168.12.3 remote-as 65102
+   neighbor 172.16.1.1 remote-as 65101
+   neighbor 172.16.1.2 remote-as 65102   
+```
+
+**leaf-03**
+```
+router bgp 65003
+   no neighbor SPINE peer group
+   no neighbor SPINE remote-as 65000
+   no neighbor SPINE_OVERLAY allowas-in 1
+   no neighbor SPINE_OVERLAY remote-as 65000
+   neighbor 192.168.11.5 remote-as 65101
+   neighbor 192.168.12.5 remote-as 65102
+   neighbor 172.16.1.1 remote-as 65101
+   neighbor 172.16.1.2 remote-as 65102   
+```
+
+на fw сделаем перезапись AS_PATH:
+**fw**
+```
+router bgp 65500
+   neighbor 192.168.255.0 remove-private-as all replace-as
+   neighbor 192.168.255.2 remove-private-as all replace-as
+   neighbor 192.168.255.4 remove-private-as all replace-as
+```
+
+#### Проверка vrf leaking через fw без allowas-in 
+
+Просмотрим type 5 маршруты в bgp evpn таблице
+
+![alt text](image-17.png)
+
+Просмотрим маршруты в vrf inside
+
+![alt text](image-18.png)
+
+Просмотрим маршруты в vrf OTUS
+
+![alt text](image-19.png)
+
+Просмотрим маршруты в vrf DMZ
+
+![alt text](image-20.png)
+
+Проверим пинг и трассу
+![alt text](image-21.png)
+
+Такой вариант тоже работает, но при двух spine нужно учитывать, что если один нужно вывести на обслуживание, то необходимо сделать allowas-in, чтобы сохранить работу vrf-leaking
 
 ### Настройка leaking INSIDE <--> OTUS через leaf
 
@@ -376,6 +507,23 @@ router bgp 6500X
 [Spine-02](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-08/Allowas-in/Spine-02.txt)
 
 [fw](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-08/Allowas-in/fw.txt)
+
+
+
+### Конфигурация с разными AS на spine без allowas-in с перезаписью AS_PATH на fw
+
+
+[Leaf-01](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-08/AS-pathoverride/Leaf-01.txt)
+
+[Leaf-02](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-08/AS-pathoverride/Leaf-02.txt)
+
+[Leaf-03](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-08/AS-pathoverride/Leaf-03.txt)
+
+[Spine-01](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-08/AS-pathoverride/Spine-01.txt)
+
+[Spine-02](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-08/AS-pathoverride/Spine-02.txt)
+
+[fw](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-08/AS-pathoverride/fw.txt)
 
 
 
