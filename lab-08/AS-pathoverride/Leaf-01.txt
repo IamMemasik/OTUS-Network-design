@@ -1,0 +1,188 @@
+leaf-01(config)#sh ip route vrf DMZ
+
+VRF: DMZ
+Codes: C - connected, S - static, K - kernel, 
+       O - OSPF, IA - OSPF inter area, E1 - OSPF external type 1,
+       E2 - OSPF external type 2, N1 - OSPF NSSA external type 1,
+       N2 - OSPF NSSA external type2, B - Other BGP Routes,
+       B I - iBGP, B E - eBGP, R - RIP, I L1 - IS-IS level 1,
+       I L2 - IS-IS level 2, O3 - OSPFv3, A B - BGP Aggregate,
+       A O - OSPF Summary, NG - Nexthop Group Static Route,
+       V - VXLAN Control Service, M - Martian,
+       DH - DHCP client installed default route,
+       DP - Dynamic Policy Route, L - VRF Leaked,
+       G  - gRIBI, RC - Route Cache Route
+
+Gateway of last resort is not set
+
+ B E      10.1.10.0/24 [200/0] via VTEP 172.16.0.3 VNI 56000 router-mac 50:00:00:72:8b:31 local-interface Vxlan1
+ B E      10.1.20.0/24 [200/0] via VTEP 172.16.0.3 VNI 56000 router-mac 50:00:00:72:8b:31 local-interface Vxlan1
+ B E      10.1.110.0/23 [200/0] via VTEP 172.16.0.3 VNI 56000 router-mac 50:00:00:72:8b:31 local-interface Vxlan1
+ B E      10.1.220.101/32 [200/0] via VTEP 172.16.0.2 VNI 56000 router-mac 50:00:00:cb:38:c2 local-interface Vxlan1
+ C        10.1.220.0/24 is directly connected, Vlan220
+ B E      10.1.221.100/32 [200/0] via VTEP 172.16.0.3 VNI 56000 router-mac 50:00:00:72:8b:31 local-interface Vxlan1
+ C        10.1.221.0/24 is directly connected, Vlan221
+ B E      10.1.220.0/23 [200/0] via VTEP 172.16.0.3 VNI 56000 router-mac 50:00:00:72:8b:31 local-interface Vxlan1
+
+leaf-01(config)#sh run
+! Command: show running-config
+  ! device: leaf-01 (vEOS-lab, EOS-4.29.2F)
+!
+! boot system flash:/vEOS-lab.swi
+!
+no aaa root
+!
+transceiver qsfp default-mode 4x10G
+!
+service routing protocols model multi-agent
+!
+hostname leaf-01
+!
+spanning-tree mode mstp
+!
+vlan 10,20,110-111,220-221
+!
+vrf instance DMZ
+!
+vrf instance INSIDE
+!
+vrf instance OTUS
+!
+interface Port-Channel1
+   description r:switch c:esi-0010
+   switchport trunk allowed vlan 111,220-221
+   switchport mode trunk
+   !
+   evpn ethernet-segment
+      identifier 0011:1111:1111:1111:1111
+      route-target import 00:01:00:01:00:01
+   lacp system-id dead.dead.0001
+!
+interface Ethernet1
+   description r:spine-01
+   no switchport
+   ip address 192.168.11.0/31
+!
+interface Ethernet2
+   description r:spine-02
+   no switchport
+   ip address 192.168.12.0/31
+!
+interface Ethernet3
+   switchport access vlan 10
+!
+interface Ethernet4
+   channel-group 1 mode active
+!
+interface Ethernet5
+   switchport access vlan 110
+!
+interface Ethernet6
+   switchport access vlan 220
+!
+interface Ethernet7
+!
+interface Ethernet8
+!
+interface Loopback0
+   ip address 172.16.0.1/32
+!
+interface Loopback1
+!
+interface Management1
+!
+interface Vlan10
+   vrf INSIDE
+   ip address virtual 10.1.10.1/24
+!
+interface Vlan20
+   vrf INSIDE
+   ip address virtual 10.1.20.1/24
+!
+interface Vlan110
+   vrf OTUS
+   ip address virtual 10.1.110.1/24
+!
+interface Vlan111
+   vrf OTUS
+   ip address virtual 10.1.111.1/24
+!
+interface Vlan220
+   vrf DMZ
+   ip address virtual 10.1.220.1/24
+!
+interface Vlan221
+   vrf DMZ
+   ip address virtual 10.1.221.1/24
+!
+interface Vxlan1
+   vxlan source-interface Loopback0
+   vxlan udp-port 4789
+   vxlan vlan 10 vni 10010
+   vxlan vlan 20 vni 10020
+   vxlan vlan 110 vni 10110
+   vxlan vlan 111 vni 10111
+   vxlan vlan 220 vni 10220
+   vxlan vlan 221 vni 10221
+   vxlan vrf DMZ vni 56000
+   vxlan vrf INSIDE vni 50000
+   vxlan vrf OTUS vni 60000
+!
+ip virtual-router mac-address 00:00:00:00:00:01
+!
+ip routing
+ip routing vrf DMZ
+ip routing vrf INSIDE
+ip routing vrf OTUS
+!
+ip prefix-list UNDERLAY_IP
+   seq 30 permit 172.16.0.1/32
+!
+route-map UNDERLAY_EXPORT permit 10
+   match ip address prefix-list UNDERLAY_IP
+!
+router bgp 65001
+   router-id 172.16.0.1
+   maximum-paths 10
+   neighbor SPINE_OVERLAY peer group
+   neighbor SPINE_OVERLAY update-source Loopback0
+   no neighbor SPINE_OVERLAY allowas-in
+   neighbor SPINE_OVERLAY ebgp-multihop 2
+   neighbor SPINE_OVERLAY send-community
+   neighbor 172.16.1.1 peer group SPINE_OVERLAY
+   neighbor 172.16.1.1 remote-as 65101
+   no neighbor 172.16.1.1 shutdown
+   neighbor 172.16.1.2 peer group SPINE_OVERLAY
+   neighbor 172.16.1.2 remote-as 65102
+   neighbor 192.168.11.1 remote-as 65101
+   neighbor 192.168.12.1 remote-as 65102
+   redistribute connected route-map UNDERLAY_EXPORT
+   !
+   vlan-aware-bundle INSIDE
+      rd 172.16.0.1:10100
+      route-target both 100:10100
+      redistribute learned
+      vlan 10,20,110-111,220-221
+   !
+   address-family evpn
+      neighbor SPINE_OVERLAY activate
+   !
+   address-family ipv4
+      no neighbor SPINE_OVERLAY activate
+   !
+   vrf DMZ
+      rd 172.16.0.1:56000
+      route-target import evpn 100:56000
+      route-target export evpn 100:56000
+   !
+   vrf INSIDE
+      rd 172.16.0.1:50000
+      route-target import evpn 100:50000
+      route-target export evpn 100:50000
+   !
+   vrf OTUS
+      rd 172.16.0.1:60000
+      route-target import evpn 100:60000
+      route-target export evpn 100:60000
+!
+end
