@@ -1,0 +1,181 @@
+leaf-03(config)#sh run
+! Command: show running-config
+! device: leaf-03 (vEOS-lab, EOS-4.29.2F)
+!
+! boot system flash:/vEOS-lab.swi
+!
+no aaa root
+!
+transceiver qsfp default-mode 4x10G
+!
+service routing protocols model multi-agent
+!
+hostname leaf-03
+!
+spanning-tree mode mstp
+!
+vlan 10,20,110-111,220-221
+!
+vrf instance DMZ
+!
+vrf instance INSIDE
+!
+vrf instance OTUS
+!
+interface Ethernet1
+   description r:spine-01
+   no switchport
+   ip address 192.168.11.4/31
+!
+interface Ethernet2
+   description r:spine-02
+   no switchport
+   ip address 192.168.12.4/31
+!
+interface Ethernet3
+   switchport access vlan 10
+!
+interface Ethernet4
+   switchport access vlan 20
+!
+interface Ethernet5
+   switchport access vlan 221
+!
+interface Ethernet6
+   description "r:fw"
+   no switchport
+!
+interface Ethernet6.1
+   description "r:fw c:vrf-INSIDE"
+   encapsulation dot1q vlan 1
+   vrf INSIDE
+   ip address 192.168.255.0/31
+!
+interface Ethernet6.2
+   description "r:fw c:vrf-OTUS"
+   encapsulation dot1q vlan 2
+   vrf OTUS
+   ip address 192.168.255.2/31
+!
+interface Ethernet6.3
+   description "r:fw c:vrf-DMZ"
+   encapsulation dot1q vlan 3
+   vrf DMZ
+   ip address 192.168.255.4/31
+!
+interface Ethernet7
+!
+interface Ethernet8
+!
+interface Loopback0
+   ip address 172.16.0.3/32
+!
+interface Management1
+!
+interface Vlan10
+   vrf INSIDE
+   ip address virtual 10.1.10.1/24
+!
+interface Vlan20
+   vrf INSIDE
+   ip address virtual 10.1.20.1/24
+!
+interface Vlan110
+   vrf OTUS
+   ip address virtual 10.1.110.1/24
+!
+interface Vlan111
+   vrf OTUS
+   ip address virtual 10.1.111.1/24
+!
+interface Vlan220
+   vrf DMZ
+   ip address virtual 10.1.220.1/24
+!
+interface Vlan221
+   vrf DMZ
+   ip address virtual 10.1.221.1/24
+!
+interface Vxlan1
+   vxlan source-interface Loopback0
+   vxlan udp-port 4789
+   vxlan vlan 10 vni 10010
+   vxlan vlan 20 vni 10020
+   vxlan vlan 110 vni 10110
+   vxlan vlan 111 vni 10111
+   vxlan vlan 220 vni 10220
+   vxlan vlan 221 vni 10221
+   vxlan vrf DMZ vni 56000
+   vxlan vrf INSIDE vni 50000
+   vxlan vrf OTUS vni 60000
+!
+ip virtual-router mac-address 00:00:00:00:00:01
+!
+ip routing
+ip routing vrf DMZ
+ip routing vrf INSIDE
+ip routing vrf OTUS
+!
+ip prefix-list UNDERLAY_IP
+   seq 30 permit 172.16.0.3/32
+!
+route-map UNDERLAY_EXPORT permit 10
+   match ip address prefix-list UNDERLAY_IP
+!
+router bgp 65003
+   router-id 172.16.0.3
+   maximum-paths 10
+   neighbor SPINE_OVERLAY peer group
+   neighbor SPINE_OVERLAY update-source Loopback0
+   no neighbor SPINE_OVERLAY allowas-in
+   neighbor SPINE_OVERLAY ebgp-multihop 2
+   neighbor SPINE_OVERLAY send-community
+   neighbor 172.16.1.1 peer group SPINE_OVERLAY
+   neighbor 172.16.1.1 remote-as 65101
+   neighbor 172.16.1.2 peer group SPINE_OVERLAY
+   neighbor 172.16.1.2 remote-as 65102
+   neighbor 192.168.11.5 remote-as 65101
+   neighbor 192.168.12.5 remote-as 65102
+   redistribute connected route-map UNDERLAY_EXPORT
+   !
+   vlan-aware-bundle INSIDE
+      rd 172.16.0.3:10100
+      route-target both 100:10100
+      redistribute learned
+      vlan 10,20,110-111,220-221
+   !
+   address-family evpn
+      neighbor SPINE_OVERLAY activate
+   !
+   address-family ipv4
+      no neighbor SPINE_OVERLAY activate
+   !
+   vrf DMZ
+      rd 172.16.0.3:56000
+      route-target import evpn 100:56000
+      route-target export evpn 100:56000
+      neighbor 192.168.255.5 remote-as 65500
+      neighbor 192.168.255.5 description "r:fw c:vrf-DMZ"
+      neighbor 192.168.255.5 allowas-in 2
+      aggregate-address 10.1.220.0/23 summary-only
+   !
+   vrf INSIDE
+      rd 172.16.0.3:50000
+      route-target import evpn 100:50000
+      route-target export evpn 100:50000
+      neighbor 192.168.255.1 remote-as 65500
+      neighbor 192.168.255.1 description "r:fw c:vrf-INSIDE"
+      neighbor 192.168.255.1 allowas-in 2
+      aggregate-address 10.1.10.0/24 summary-only
+      aggregate-address 10.1.20.0/24 summary-only
+   !
+   vrf OTUS
+      rd 172.16.0.1:60000
+      route-target import evpn 100:60000
+      route-target export evpn 100:60000
+      neighbor 192.168.255.3 remote-as 65500
+      neighbor 192.168.255.3 description "r:fw c:vrf-OTUS"
+      neighbor 192.168.255.3 allowas-in 2
+      aggregate-address 10.1.110.0/23 summary-only
+!
+end
