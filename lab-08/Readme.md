@@ -343,6 +343,9 @@ router bgp 65000
 
 Обновлённая топология: 
 
+![alt text](image-25.png)
+
+
 **spine-01**
 
 ```
@@ -485,13 +488,46 @@ router bgp 6500X
       route-target import evpn 100:60000
    !
    vrf OTUS
-      rd 172.16.0.1:60000
       route-target import evpn 100:50000
 ```
 
+Проверим leaking:
+
+![alt text](image-22.png)
+
+Видим, что до сети в vrf OTUS всё происходит в рамках лифа, а для DMZ идёт через fw.
+
+Но я это уберу.
+
+## Отдача внешнего машрута в фабрику
+На fw отдадим внешний машрут 8.8.8.0/24
+
+**fw**
+```
+interface Vlan888
+   ip address 8.8.8.1/24
+
+interface Ethernet2
+   switchport access vlan 888
+
+router bgp 65500
+   network 8.8.8.0/24
+```
+
+
+### Проверим получение внешнего машрута
+```
+![alt text](image-23.png)
+```
+Заметим маршрут во всех vrf.
+
+Проверим пинг
+![alt text](image-24.png)
 
 
 ## Итоговая конфигурация в файлах:
+
+
 
 *Было решено убрать bfd так как оно очень мешало в eve-ng, часто падало соседство*
 
@@ -524,9 +560,3 @@ router bgp 6500X
 [Spine-02](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-08/AS-pathoverride/Spine-02.txt)
 
 [fw](https://github.com/IamMemasik/OTUS-Network-design/tree/main/lab-08/AS-pathoverride/fw.txt)
-
-
-
-
-
-
