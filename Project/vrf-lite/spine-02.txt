@@ -1,0 +1,91 @@
+spine-02(config)#sh run
+! Command: show running-config
+! device: spine-02 (vEOS-lab, EOS-4.29.2F)
+!
+! boot system flash:/vEOS-lab.swi
+!
+no aaa root
+!
+transceiver qsfp default-mode 4x10G
+!
+service routing protocols model multi-agent
+!
+hostname spine-02
+!
+spanning-tree mode mstp
+!
+interface Ethernet1
+   description r:leaf-01
+   no switchport
+   ip address 192.168.12.1/31
+!
+interface Ethernet2
+   description r:leaf-02
+   no switchport
+   ip address 192.168.12.3/31
+!
+interface Ethernet3
+   description r:leaf-03
+   no switchport
+   ip address 192.168.12.5/31
+!
+interface Ethernet4
+   description "r:br-leaf-01"
+   no switchport
+   ip address 192.168.12.7/31
+!
+interface Ethernet5
+   description "r:br-leaf-02"
+   no switchport
+   ip address 192.168.12.9/31
+!
+interface Ethernet6
+!
+interface Ethernet7
+!
+interface Ethernet8
+!
+interface Loopback0
+   ip address 172.16.1.2/32
+!
+interface Management1
+!
+ip routing
+!
+ip prefix-list UNDERLAY-IP
+   seq 10 permit 172.16.1.2/32
+!
+route-map UNDERLAY-EXPORT permit 10
+   match ip address prefix-list UNDERLAY-IP
+!
+router bgp 65102
+   router-id 172.16.1.1
+   maximum-paths 10
+   neighbor LEAF-OVERLAY peer group
+   neighbor LEAF-OVERLAY update-source Loopback0
+   neighbor LEAF-OVERLAY ebgp-multihop 2
+   neighbor LEAF-OVERLAY send-community
+   neighbor 172.16.0.1 peer group LEAF-OVERLAY
+   neighbor 172.16.0.1 remote-as 65001
+   neighbor 172.16.0.2 peer group LEAF-OVERLAY
+   neighbor 172.16.0.2 remote-as 65002
+   neighbor 172.16.0.3 peer group LEAF-OVERLAY
+   neighbor 172.16.0.3 remote-as 65003
+   neighbor 172.16.10.1 peer group LEAF-OVERLAY
+   neighbor 172.16.10.1 remote-as 65201
+   neighbor 172.16.10.2 peer group LEAF-OVERLAY
+   neighbor 172.16.10.2 remote-as 65202
+   neighbor 192.168.12.0 remote-as 65001
+   neighbor 192.168.12.2 remote-as 65002
+   neighbor 192.168.12.4 remote-as 65003
+   neighbor 192.168.12.6 remote-as 65201
+   neighbor 192.168.12.8 remote-as 65202
+   redistribute connected route-map UNDERLAY-EXPORT
+   !
+   address-family evpn
+      neighbor LEAF-OVERLAY activate
+   !
+   address-family ipv4
+      no neighbor LEAF-OVERLAY activate
+!
+end
