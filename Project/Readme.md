@@ -1214,5 +1214,7 @@ BGP evpn таблица
 ![alt text](screenshots/image28.png)
 
 
-Полная конфигурация для этой реализации находится [тут]().
+Полная конфигурация для этой реализации находится [тут](https://github.com/IamMemasik/OTUS-Network-design/tree/main/Project/vrf-lite).
 
+
+### Вариант 2.
