@@ -1096,13 +1096,13 @@ s
                                  -                     -       100     0       65203 65202 65101 65001 i
 ```
 
-![alt text](/screenshots/image20.png)
+![alt text](screenshots/image20.png)
 
 Такое точно нам не нужно.
 
 Что видят leaf:
 
-![alt text](/screenshots/image21.png)
+![alt text](screenshots/image21.png)
 
 Как результат, leaf знают только самые лучшие маршруты и нас всё устраивает, кроме
 ```
