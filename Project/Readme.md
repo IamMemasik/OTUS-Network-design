@@ -1219,3 +1219,261 @@ BGP evpn таблица
 
 
 ### Вариант 2.
+
+Вернём br-leaf'ы до состония в котором они были до реализии первого варианта.
+
+Для начала настроим DCI между br-leaf-01 и br-leaf-04
+
+#### Настройка UNDERLAY
+
+
+**br-leaf-01**
+```
+interface Ethernet4
+   description "r:br-leaf-04"
+   no switchport
+   ip address 192.168.100.2/31
+router bgp 65201
+      neighbor 192.168.100.3 remote-as 65204
+```
+
+**br-leaf-04**
+```
+interface Ethernet4
+   description "r:br-leaf-01"
+   no switchport
+   ip address 192.168.100.3/31
+
+router bgp 65204
+   neighbor 192.168.100.2 remote-as 65201
+```
+
+##### Проверка underlay связности 
+
+![alt text](screenshots/image29.png)
+
+#### Настройка Overlay
+
+**br-leaf-01**
+
+```
+interface Loopback1           # Создадим loopback в vrf, т.к. у нас нет сетей в этом vrf без loopback не заработает.
+   vrf INSIDE
+   ip address 172.16.100.1/32
+!
+interface Loopback2
+   vrf OTUS
+   ip address 172.16.200.1/32
+!
+router bgp 65201  
+   neighbor DCI peer group
+   neighbor DCI update-source Loopback0
+   neighbor DCI ebgp-multihop 2
+   neighbor DCI send-community
+
+   neighbor 172.16.10.4 peer group DCI
+   neighbor 172.16.10.4 remote-as 65204
+
+   address-family evpn
+      neighbor DCI activate
+      neighbor DCI domain remote
+      neighbor default next-hop-self received-evpn-routes route-type ip-prefix inter-domain
+   
+   address-family ipv4
+      no neighbor DCI activate
+
+   vrf INSIDE
+      rd 172.16.10.1:50100
+      route-target import evpn 100:50100
+      route-target export evpn 100:50100
+      redistribute connected
+   !
+   vrf OTUS
+      rd 172.16.10.1:50200
+      route-target import evpn 200:50200
+      route-target export evpn 200:50200
+      redistribute connected
+```
+
+Разберём по порядку команду
+
+```
+ neighbor default next-hop-self received-evpn-routes route-type ip-prefix inter-domain
+```
+next-hop-self - маршруты которые мы отдаёт будут с ip адресом loopback0 в качестве next-hop
+
+received-evpn-routes route-type ip-prefix - приниммать только type-5 маршруты
+
+inter-domain - позволяет использовать nexthop self для локальных и удаленных доменов EVPN.
+
+
+**br-leaf-04**
+```
+interface Loopback1
+   vrf INSIDE
+   ip address 172.16.100.4/32
+!
+interface Loopback2
+   vrf OTUS
+   ip address 172.16.200.4/32
+
+
+router bgp 65204
+   neighbor DCI peer group
+   neighbor DCI update-source Loopback0
+   neighbor DCI ebgp-multihop 2
+   neighbor DCI send-community
+   neighbor 172.16.10.1 peer group DCI
+   neighbor 172.16.10.1 remote-as 65201
+
+   address-family evpn
+      neighbor DCI activate
+      neighbor DCI domain remote    
+      neighbor default next-hop-self received-evpn-routes route-type ip-prefix inter-domain          
+  
+   address-family ipv4
+      no neighbor DCI activate
+
+   vrf INSIDE
+      rd 172.16.10.4:50100
+      route-target import evpn 100:50100
+      route-target export evpn 100:50100
+      redistribute connected
+   !
+   vrf OTUS
+      rd 172.16.10.4:50200
+      route-target import evpn 200:50200
+      route-target export evpn 200:50200
+      redistribute connected
+```
+
+
+### Настройка Vxlan 
+
+
+**br-leaf-01**
+
+```
+interface Vxlan1
+   vxlan source-interface Loopback0
+   vxlan udp-port 4789
+   vxlan vrf INSIDE vni 50100
+   vxlan vrf OTUS vni 50200
+
+router bgp 65201
+   vlan-aware-bundle INSIDE
+      rd evpn domain all 10.255.1.1:10100                      # Делаем общий RD для всех доменов
+      route-target both 100:10100
+      route-target import export evpn domain remote 100:10100  # Указываем одинакомый rt на import/export для evpn домена.
+      redistribute learned 
+```
+
+**br-leaf-04**
+
+```
+interface Vxlan1
+   vxlan source-interface Loopback0
+   vxlan udp-port 4789
+   vxlan vrf INSIDE vni 50100
+   vxlan vrf OTUS vni 50200
+
+router bgp 65204
+   vlan-aware-bundle INSIDE
+      rd evpn domain all 10.255.1.1:10100 
+      route-target both 100:10100
+      route-target import export evpn domain remote 100:10100
+      redistribute learned
+   !
+```
+
+На всех lead во всех DC добавим 
+
+```
+router bgp 6500X
+   vrf INSIDE
+   redistribute connected     # Чтобы отдать /24 по evpn type-5
+   redistribute attached-host # Чтобы отдать /32 по evpn type-5
+   vrf OTUS
+   redistribute connected
+   redistribute attached-host
+```
+
+Этими настройками мы избавляемся от проблемы молчаливых хостов.
+
+#### Проверка работоспособности  
+
+Просмотрим таблицу маршрутов
+
+**br-leaf-01**
+
+![alt text](screenshots/image30.png)
+
+**leaf-01**
+
+![alt text](screenshots/image31.png)
+
+
+**br-leaf-04**
+
+![alt text](screenshots/image32.png)
+
+**leaf-04**
+
+![alt text](screenshots/image33.png)
+
+Проверим ping
+В VRF INSIDE
+
+![alt text](screenshots/image34.png)
+
+В VRF OTUS
+
+![alt text](screenshots/image35.png)
+
+
+Проследим весь путь прохождения трафика от leaf-01 до leaf-04
+Запустим пинг с INSIDE-host-2(10.1.20.100) до INSIDE-host-5 (10.2.30.100)
+
+Дамп на leaf-01
+![alt text](screenshots/image36.png)
+
+Дамп на spine-01
+
+![alt text](screenshots/image37.png)
+
+На данном этапе видим, что router-mac одинаковый в исходном и в vxlan заголовке, тем самым br-leaf поймёт, что по мак пакет предназначен ему, но по ip нет.
+
+и перебьёт mac в соответсвии с записями в таблице маршрутизации
+```
+ B E      10.2.30.0/24 [200/0] via VTEP 172.16.10.4 VNI 50100 router-mac 50:0e:87:69:9c:75 local-interface Vxlan1
+ B E      10.2.40.0/24 [200/0] via VTEP 172.16.10.4 VNI 50100 router-mac 50:0e:87:69:9c:75 local-interface Vxlan1 
+```
+
+**между br-leaf-01 и br-leaf-04**
+
+![alt text](screenshots/image38.png)
+
+
+Затем br-leaf-04 видит, что mac назначения совпадет с его mac, но ip нет и перебьёт mac дальше в соответсвии с записью.
+```
+ B E      10.2.30.0/24 [200/0] via VTEP 172.16.0.4 VNI 50100 router-mac 50:11:c5:0a:ff:2b local-interface Vxlan1
+                               via VTEP 172.16.0.5 VNI 50100 router-mac 50:4d:07:23:e7:bf local-interface Vxlan1
+ B E      10.2.40.0/24 [200/0] via VTEP 172.16.0.4 VNI 50100 router-mac 50:11:c5:0a:ff:2b local-interface Vxlan1
+                               via VTEP 172.16.0.5 VNI 50100 router-mac 50:4d:07:23:e7:bf local-interface Vxlan1
+```
+
+**от br-leaf-04 до spine-03**
+
+![alt text](screenshots/image39.png)
+
+**от spine-03 до leaf-04**
+
+![alt text](screenshots/image40.png)
+
+
+leaf-04 получит пакет со своим router-mac и увидит у себя в connected mac/ip запись и распакует пакет 
+
+![alt text](image41.png)
+
+
+### Донастроим остальные border-leaf 
