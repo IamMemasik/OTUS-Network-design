@@ -807,6 +807,7 @@ EVPN маршруты на leaf-01
 ![alt text](screenshots/image10.png)
 
 Проверка связности внутри vrf INSIDE
+
 ![alt text](screenshots/image11.png)
 
 Проверка связности внутри vrf OTUS
