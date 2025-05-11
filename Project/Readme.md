@@ -10,7 +10,7 @@
 
 ## Топололгия сети 
 
-![alt text](/screenshots/image.png)
+![alt text](screenshots/image.png)
 
 
 ### Описание топологии 
