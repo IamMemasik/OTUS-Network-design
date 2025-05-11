@@ -1473,7 +1473,21 @@ router bgp 6500X
 
 leaf-04 получит пакет со своим router-mac и увидит у себя в connected mac/ip запись и распакует пакет 
 
-![alt text](image41.png)
+```
+ * >      RD: 172.16.0.4:10100 mac-ip 10030 0050.7966.68b0 10.2.30.100
+                                 -                     -       -       0       i
+
+leaf-04(config)#sh mac address-table add 0050.7966.68b0
+          Mac Address Table
+------------------------------------------------------------------
+
+Vlan    Mac Address       Type        Ports      Moves   Last Move
+----    -----------       ----        -----      -----   ---------
+  30    0050.7966.68b0    DYNAMIC     Et3        1       0:21:14 ago
+Total Mac Addresses for this criterion: 1
+```
+
+![alt text](screenshots/image41.png)
 
 
 ### Донастроим остальные border-leaf 
