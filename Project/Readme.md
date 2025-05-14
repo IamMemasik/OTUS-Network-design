@@ -6,7 +6,7 @@
 Данный проект будет содержать две реализаци:   
 
 1) Два DC будут видеть друга как внешнее устройтсво, между ними будет обычный ip трафик.
-2) Два DC будут связаны через VXLAN/EVPN type2 и type5 маршруты.
+2) Два DC будут связаны через VXLAN/EVPN Multi-domain (Standalone DCI gateway) type5 маршруты.
 
 ## Топололгия сети 
 
@@ -1485,9 +1485,305 @@ Vlan    Mac Address       Type        Ports      Moves   Last Move
 ----    -----------       ----        -----      -----   ---------
   30    0050.7966.68b0    DYNAMIC     Et3        1       0:21:14 ago
 Total Mac Addresses for this criterion: 1
+
 ```
 
 ![alt text](screenshots/image41.png)
 
 
-### Донастроим остальные border-leaf 
+### Ннастроим br-leaf-03
+
+Настроим undreylay и overlay связность между br-leaf-01 и br-leaf-03
+
+br-leaf-01
+```
+interface Ethernet3
+   description "r:br-leaf-03
+   no switchport
+   ip address 192.168.100.0/31
+!
+
+router bgp 65201
+   neighbor 192.168.100.1 remote-as 65203
+   neighbor 172.16.10.3 peer group DCI
+   neighbor 172.16.10.3 remote-as 65203
+```
+
+br-leaf-03
+```
+interface Ethernet3
+   description r:br-leaf-01
+   no switchport
+   ip address 192.168.100.1/31
+!
+
+interface Loopback1
+   vrf INSIDE
+   ip address 172.16.100.3/32
+!
+interface Loopback2
+   vrf OTUS
+   ip address 172.16.200.3/32
+!
+
+router bgp 65203
+   neighbor 192.168.100.0 remote-as 65201
+   neighbor 172.16.10.1 peer group DCI
+   neighbor 172.16.10.1 remote-as 65201
+
+vlan-aware-bundle INSIDE
+      rd evpn domain all 10.255.1.1:10100
+      route-target both 100:10100
+      route-target import export evpn domain remote 100:10100
+      redistribute learned
+   !
+   address-family evpn
+      neighbor DCI activate
+      neighbor DCI domain remote
+      neighbor default next-hop-self received-evpn-routes route-type ip-prefix inter-domain
+   !
+   address-family ipv4
+      no neighbor DCI activate
+
+interface Vxlan1
+   vxlan source-interface Loopback0
+   vxlan udp-port 4789
+   vxlan vrf INSIDE vni 50100
+   vxlan vrf OTUS vni 50200
+```
+
+#### Проверим соседство и маршруты
+
+![alt text](screenshots/image42.png)
+
+Проверим маршруты до DC2 на br-leaf-01 и leaf-01
+
+**br-leaf-01**
+
+![alt text](screenshots/image43.png)
+
+Заметим два маршрута через разные br-leaf второго DC
+
+
+Теперь проверим на leaf-01
+
+![alt text](screenshots/image44.png)
+
+
+Проверим на DC2 до DC1
+
+**br-leaf-03**
+
+![alt text](screenshots/image45.png)
+
+**leaf-04**
+
+![alt text](screenshots/image46.png)
+
+![alt text](screenshots/image47.png)
+
+У leaf-04 есть маршруты только от br-leaf-04
+
+leaf по каким-то причинам не получает маршрут через br-leaf-03.
+
+Проверим, что отдаёт br-leaf-03 в сторону spine
+
+![alt text](screenshots/image48.png)
+
+Проверим что хранит spine и что отдаёт на leaf
+
+
+**spine-03**
+
+![alt text](screenshots/image49.png)
+
+
+![alt text](screenshots/image50.png)
+
+Видно, что spine получил два одинаковых маршрута и отдаёт только лучший (в данной ситуации тот маршрут, что старее)
+
+Чтобы оба маршрута отдались на leaf-01 нужно на spine включить опцию 
+BGP Additional Path (ADD-PATH) — это расширение BGP, позволяющее маршрутизатору объявлять несколько путей (маршрутов) для одного и того же префикса.
+
+***Важный нюанс - включение данной опции перезапустит bgp соседство* в evpn**
+
+Все spine 
+```
+router bgp 6510X
+bgp additional-paths send ecmp 
+```
+
+Все leaf
+
+```
+router bgp 6510X
+bgp additional-paths receive
+```
+
+Проверяем на leaf
+
+![alt text](screenshots/image51.png)
+
+Видим маршруты через оба br-leaf полученные от обоих spine
+
+![alt text](screenshots/image52.png)
+
+
+### Настроим пиринг с br-leaf-02
+ 
+
+Обеспечим underlay и overlay связность br-leaf-02 c br-leaf-03 и 04
+
+**br-leaf-03**
+```
+interface Ethernet4
+   description "r:br-leaf-02"
+   no switchport
+   ip address 192.168.100.5/31
+
+router bgp 65203
+   neighbor 192.168.100.4 remote-as 65202
+   neighbor 172.16.10.2 peer group DCI
+   neighbor 172.16.10.2 remote-as 65202
+```
+
+**br-leaf-04**
+```
+interface Ethernet3
+   description "r:br-leaf-02"
+   no switchport
+   ip address 192.168.100.7/31
+
+router bgp 65204
+   neighbor 192.168.100.6 remote-as 65202
+   neighbor 172.16.10.2 peer group DCI
+   neighbor 172.16.10.2 remote-as 65202
+
+```
+
+**br-leaf-02**
+```
+interface Ethernet3
+   description "r:br-leaf-04
+   no switchport
+   ip address 192.168.100.6/31
+!
+interface Ethernet4
+   description "r:br-leaf-03"
+   no switchport
+   ip address 192.168.100.4/31
+
+router bgp 65202
+   neighbor DCI peer group
+   neighbor DCI update-source Loopback0
+   neighbor DCI ebgp-multihop 2
+   neighbor DCI send-community
+   neighbor 192.168.100.5 remote-as 65203s
+   neighbor 192.168.100.7 remote-as 65204
+   neighbor 172.16.10.3 peer group DCI
+   neighbor 172.16.10.3 remote-as 65203
+   neighbor 172.16.10.4 peer group DCI
+   neighbor 172.16.10.4 remote-as 65204
+
+   vlan-aware-bundle INSIDE
+      rd evpn domain all 10.255.1.1:10100
+      route-target both 100:10100
+      route-target import export evpn domain remote 100:10100
+      redistribute learned
+   !
+   address-family evpn
+      neighbor DCI activate
+      neighbor DCI domain remote
+      neighbor default next-hop-self received-evpn-routes route-type ip-prefix inter-domain
+   !
+   address-family ipv4
+      no neighbor DCI activate
+
+interface Vxlan1
+   vxlan source-interface Loopback0
+   vxlan udp-port 4789
+   vxlan vrf INSIDE vni 50100
+   vxlan vrf OTUS vni 50200
+   
+```
+
+
+
+В DC1 тоже включим опции на:
+
+Всех spine 
+```
+router bgp 6510X
+bgp additional-paths send ecmp 
+```
+
+Всех leaf
+
+```
+router bgp 6510X
+bgp additional-paths receive
+```
+
+
+Готово, посмотрим маршруты на br-leaf-03, что всё балансируется между br-leaf-01 и 02
+
+![alt text](screenshots/image53.png)
+
+
+Посмотри маршруты на br-leaf-01/02
+
+![alt text](screenshots/image54.png)
+
+
+
+Запустим пинг между разными конечными устройствами в DC1 и DC2.
+
+И выключим по одномму br-leaf в каждом DC
+
+**br-leaf-01**
+```
+router 65201
+neighbor SPINE-OVERLAY shutdown 
+```
+
+**br-leaf-04**
+```
+router 65204
+neighbor SPINE-OVERLAY shutdown 
+```
+
+
+![alt text](screenshots/image55.png)
+
+
+Пинг - без потерь.
+Восстановим, и отключим другие br-leaf
+
+**br-leaf-02**
+```
+router 65202
+neighbor SPINE-OVERLAY shutdown 
+```
+
+**br-leaf-03**
+```
+router 65203
+neighbor SPINE-OVERLAY shutdown 
+```
+
+
+![alt text](screenshots/image56.png)
+
+Тоже без потерь.
+
+Полная конфигурация для второго варианта реализации находится [тут](https://github.com/IamMemasik/OTUS-Network-design/tree/main/Project/Standalone-DCI-gw).
+
+
+
+
+### Результаты
+
+В данном проекте реализованы и подробно описаны две архитектурные схемы построения распределённых EVPN/VXLAN-фабрик с междатацентровой связью по EVPN Type-5. Приведены детальные конфигурации underlay и overlay сетей для двух дата-центров, включая настройку BGP, EVPN, VXLAN, VRF и DCI. Описаны особенности маршрутизации, механизмы агрегации и фильтрации маршрутов, а также способы устранения неоптимальных путей.
+
+В результате проект демонстрирует построение масштабируемой, отказоустойчивой и гибкой сетевой инфраструктуры для современных дата-центров с возможностью эффективного обмена маршрутами между площадками.
+
