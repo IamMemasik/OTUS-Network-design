@@ -1,0 +1,86 @@
+spine-04(config)#sh run
+! Command: show running-config
+! device: spine-04 (vEOS-lab, EOS-4.29.2F)
+!
+! boot system flash:/vEOS-lab.swi
+!
+no aaa root
+!
+transceiver qsfp default-mode 4x10G
+!
+service routing protocols model multi-agent
+!
+hostname spine-04
+!
+spanning-tree mode mstp
+!
+interface Ethernet1
+   description leaf-04
+   no switchport
+   ip address 192.168.22.1/31
+!
+interface Ethernet2
+   description leaf-05
+   no switchport
+   ip address 192.168.22.3/31
+!
+interface Ethernet3
+!
+interface Ethernet4
+   description r:br-leaf-03
+   no switchport
+   ip address 192.168.22.7/31
+!
+interface Ethernet5
+   description r:br-leaf-04
+   no switchport
+   ip address 192.168.22.9/31
+!
+interface Ethernet6
+!
+interface Ethernet7
+!
+interface Ethernet8
+!
+interface Loopback0
+   ip address 172.16.1.4/32
+!
+interface Management1
+!
+ip routing
+!
+ip prefix-list UNDERLAY-IP
+   seq 10 permit 172.16.1.4/32
+!
+route-map UNDERLAY-EXPORT permit 10
+   match ip address prefix-list UNDERLAY-IP
+!
+router bgp 65104
+   router-id 172.16.1.4
+   maximum-paths 10
+   neighbor LEAF-OVERLAY peer group
+   neighbor LEAF-OVERLAY update-source Loopback0
+   neighbor LEAF-OVERLAY ebgp-multihop 2
+   neighbor LEAF-OVERLAY send-community
+   neighbor 172.16.0.4 peer group LEAF-OVERLAY
+   neighbor 172.16.0.4 remote-as 65004
+   neighbor 172.16.0.5 peer group LEAF-OVERLAY
+   neighbor 172.16.0.5 remote-as 65005
+   neighbor 172.16.10.3 peer group LEAF-OVERLAY
+   neighbor 172.16.10.3 remote-as 65203
+   neighbor 172.16.10.4 peer group LEAF-OVERLAY
+   neighbor 172.16.10.4 remote-as 65204
+   neighbor 192.168.22.0 remote-as 65004
+   neighbor 192.168.22.2 remote-as 65005
+   neighbor 192.168.22.6 remote-as 65203
+   neighbor 192.168.22.8 remote-as 65204
+   redistribute connected route-map UNDERLAY-EXPORT
+   !
+   address-family evpn
+      bgp additional-paths send ecmp
+      neighbor LEAF-OVERLAY activate
+   !
+   address-family ipv4
+      no neighbor LEAF-OVERLAY activate
+!
+end

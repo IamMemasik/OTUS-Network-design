@@ -1,6 +1,6 @@
-leaf-01(config)#sh run
+br-leaf-02(config)#sh run
 ! Command: show running-config
-! device: leaf-01 (vEOS-lab, EOS-4.29.2F)
+! device: br-leaf-02 (vEOS-lab, EOS-4.29.2F)
 !
 ! boot system flash:/vEOS-lab.swi
 !
@@ -10,11 +10,11 @@ transceiver qsfp default-mode 4x10G
 !
 service routing protocols model multi-agent
 !
-hostname leaf-01
+hostname br-leaf-02
 !
 spanning-tree mode mstp
 !
-vlan 10,20,110,120
+vlan 10,20
 !
 vrf instance INSIDE
 !
@@ -23,21 +23,24 @@ vrf instance OTUS
 interface Ethernet1
    description "r:spine-01"
    no switchport
-   ip address 192.168.11.0/31
+   ip address 192.168.11.8/31
 !
 interface Ethernet2
    description "r:spine-02"
    no switchport
-   ip address 192.168.12.0/31
+   ip address 192.168.12.8/31
 !
 interface Ethernet3
-   switchport access vlan 10
+   description "r:br-leaf-04
+   no switchport
+   ip address 192.168.100.6/31
 !
 interface Ethernet4
-   switchport access vlan 20
+   description "r:br-leaf-03"
+   no switchport
+   ip address 192.168.100.4/31
 !
 interface Ethernet5
-   switchport access vlan 110
 !
 interface Ethernet6
 !
@@ -46,51 +49,45 @@ interface Ethernet7
 interface Ethernet8
 !
 interface Loopback0
-   ip address 172.16.0.1/32
+   ip address 172.16.10.2/32
+!
+interface Loopback1
+   vrf INSIDE
+   ip address 172.20.100.2/32
 !
 interface Management1
-!
-interface Vlan10
-   vrf INSIDE
-   ip address virtual 10.1.10.1/24
-!
-interface Vlan20
-   vrf INSIDE
-   ip address virtual 10.1.20.1/24
-!
-interface Vlan110
-   vrf OTUS
-   ip address virtual 10.1.110.1/24
-!
-interface Vlan120
-   vrf OTUS
-   ip address virtual 10.1.120.1/24
 !
 interface Vxlan1
    vxlan source-interface Loopback0
    vxlan udp-port 4789
-   vxlan vlan 10 vni 10010
-   vxlan vlan 20 vni 10020
-   vxlan vlan 110 vni 10110
-   vxlan vlan 120 vni 10120
    vxlan vrf INSIDE vni 50100
    vxlan vrf OTUS vni 50200
-!
-ip virtual-router mac-address 00:00:00:00:00:01
 !
 ip routing
 ip routing vrf INSIDE
 ip routing vrf OTUS
 !
+ip prefix-list MY-NET
+   seq 10 permit 10.1.0.0/16
+!
 ip prefix-list UNDERLAY-IP
-   seq 10 permit 172.16.0.1/32
+   seq 10 permit 172.16.10.2/32
+!
+route-map MY-NET-NO-REC deny 5
+   match ip address prefix-list MY-NET
+!
+route-map MY-NET-NO-REC permit 10
 !
 route-map UNDERLAY-EXPORT permit 10
    match ip address prefix-list UNDERLAY-IP
 !
-router bgp 65001
-   router-id 172.16.0.1
+router bgp 65202
+   router-id 172.16.10.2
    maximum-paths 10
+   neighbor DCI peer group
+   neighbor DCI update-source Loopback0
+   neighbor DCI ebgp-multihop 2
+   neighbor DCI send-community
    neighbor SPINE-OVERLAY peer group
    neighbor SPINE-OVERLAY update-source Loopback0
    neighbor SPINE-OVERLAY ebgp-multihop 2
@@ -99,35 +96,40 @@ router bgp 65001
    neighbor 172.16.1.1 remote-as 65101
    neighbor 172.16.1.2 peer group SPINE-OVERLAY
    neighbor 172.16.1.2 remote-as 65102
-   neighbor 192.168.11.1 remote-as 65101
-   neighbor 192.168.12.1 remote-as 65102
+   neighbor 172.16.10.3 peer group DCI
+   neighbor 172.16.10.3 remote-as 65203
+   neighbor 172.16.10.4 peer group DCI
+   neighbor 172.16.10.4 remote-as 65204
+   neighbor 192.168.11.9 remote-as 65101
+   neighbor 192.168.12.9 remote-as 65102
+   neighbor 192.168.100.5 remote-as 65203
+   neighbor 192.168.100.7 remote-as 65204
    redistribute connected route-map UNDERLAY-EXPORT
    !
    vlan-aware-bundle INSIDE
-      rd 172.16.0.1:10100
+      rd evpn domain all 10.255.1.1:10100
       route-target both 100:10100
+      route-target import export evpn domain remote 100:10100
       redistribute learned
-      vlan 10,20,110,120
    !
    address-family evpn
-      bgp additional-paths receive
+      neighbor DCI activate
+      neighbor DCI domain remote
       neighbor SPINE-OVERLAY activate
+      neighbor default next-hop-self received-evpn-routes route-type ip-prefix inter-domain
    !
    address-family ipv4
+      no neighbor DCI activate
       no neighbor SPINE-OVERLAY activate
    !
    vrf INSIDE
-      rd 172.16.0.1:50100
+      rd 172.16.10.2:50100
       route-target import evpn 100:50100
       route-target export evpn 100:50100
-      redistribute connected
-      redistribute attached-host
    !
    vrf OTUS
-      rd 172.16.0.1:50200
+      rd 172.16.10.2:50200
       route-target import evpn 200:50200
       route-target export evpn 200:50200
-      redistribute connected
-      redistribute attached-host
 !
 end
